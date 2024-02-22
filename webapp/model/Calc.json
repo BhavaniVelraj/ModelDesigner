@@ -1,0 +1,16 @@
+{
+  "ComboBoxItem": [
+    {
+      "itemname": "Input"
+    },
+    {
+      "itemname": "Button"
+    },
+    {
+      "itemname": "Table"
+    },
+    {
+      "itemname": "CheckBox"
+    }
+  ]
+}
