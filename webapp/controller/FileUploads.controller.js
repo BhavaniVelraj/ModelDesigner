@@ -24,10 +24,9 @@ sap.ui.define([
     "use strict"
     return Controller.extend("ui5.walkthrough.controller.FileUploads", {
         onInit: function () {
+
             var oModel = new JSONModel("model/Calc.json");
             this.getView().setModel(oModel, "comboboxitem");
-            console.log("12345", oModel)
-
             var oODataModel = new JSONModel({
                 Links: [] // Add your OData links here dynamically
             });
@@ -35,9 +34,11 @@ sap.ui.define([
             // Create a variable to store the JSON model
             this.oJsonModel = null;
 
-
+            this.uploadsplitpane();
+            this.uploadServiceUrl();
             this.createInnerSplitPanes();
             this.createTableSplitePanes();
+
             var responsivesplitter = new sap.ui.layout.ResponsiveSplitter("responsivesplitter", {
                 rootPaneContainer: this.oInnerPaneContainer
             });
@@ -97,14 +98,66 @@ sap.ui.define([
             this.getView().byId("icontabpage").addContent(opage);
         },
         createInnerSplitPanes: function () {
+            this.UploadResponsiveSplitter = new sap.ui.layout.ResponsiveSplitter("uploadresponsivesplitter", {
+                rootPaneContainer: this.oInnerUploadPaneContainer
+            });
+            this.uploadServiceUrlSplitter = new sap.ui.layout.ResponsiveSplitter("uploadserviceurlsplitter", {
+                rootPaneContainer: this.oInnerUploadServiceUrlPaneContainer
+            });
+
             this.oInnerPaneContainer = new PaneContainer({
             });
             this.oInnerVerticalContainer = new PaneContainer({
                 orientation: "Vertical"
             });
-            this.oInnerVerticalSplitPane1 = new sap.ui.layout.SplitPane({
+            this.oTabVertical = new sap.ui.layout.SplitPane({
                 layoutData: new SplitterLayoutData({
-                    size: "50%"
+                    size: "30%"
+                }),
+                content: new IconTabBar(this.createId("uploadicontabbar"), {
+                    stretchContentHeight: true,
+                    items: [
+                        new IconTabFilter({
+                            iconColor: "Positive",
+                            text: "Upload  File",
+                            key: "UploadOk",
+                            content: [
+                                this.UploadResponsiveSplitter
+                            ]
+                        }),
+                        new IconTabSeparator(),
+                        new IconTabFilter({
+                            iconColor: "Negative",
+                            text: "Service Url",
+                            key: "ServiceOk",
+                            content: [
+                                this.uploadServiceUrlSplitter
+                            ]
+                        }),
+                    ]
+                })
+            });
+            this.oInnerHoriZontalContainer = new PaneContainer({
+                orientation: "Horizontal"
+            });
+            this.oInnerHorizontalSplitPane1 = new sap.ui.layout.SplitPane({
+                layoutData: new SplitterLayoutData({
+                }),
+                content: this.oDynamicPage()
+            });
+
+            this.oInnerVerticalContainer.addPane(this.oTabVertical);
+            this.oInnerPaneContainer.addPane(this.oInnerVerticalContainer);
+            this.oInnerHoriZontalContainer.addPane(this.oInnerHorizontalSplitPane1);
+            this.oInnerPaneContainer.addPane(this.oInnerHoriZontalContainer);
+        },
+        uploadsplitpane: function () {
+            this.oInnerUploadPaneContainer = new PaneContainer({
+                orientation: "Vertical"
+            });
+            this.oInnerUploadVerticalSplitPane1 = new sap.ui.layout.SplitPane(this.createId("splitpane2"), {
+                layoutData: new SplitterLayoutData({
+                    size: "20%"
                 }),
                 content: new Page({
                     title: "Upload File",
@@ -117,6 +170,33 @@ sap.ui.define([
                             id: "fileUploader",
                             change: this.onFileUploadChange.bind(this)
                         }),
+
+
+                    ]
+                })
+            });
+            this.oInnerUploadVerticalSplitPane2 = new sap.ui.layout.SplitPane(this.createId("splitpane3"), {
+                layoutData: new SplitterLayoutData({
+                }),
+                content: [new sap.m.Page(this.createId("split2"), {
+                    title: "uploaded Metadata Files"
+                })]
+            })
+            this.oInnerUploadPaneContainer.addPane(this.oInnerUploadVerticalSplitPane1);
+            this.oInnerUploadPaneContainer.addPane(this.oInnerUploadVerticalSplitPane2);
+        },
+        uploadServiceUrl: function () {
+            this.oInnerUploadServiceUrlPaneContainer = new PaneContainer({
+                orientation: "Vertical"
+            });
+            this.oInnerServiceUrlVerticalSplitPane1 = new sap.ui.layout.SplitPane(this.createId("splitpane4"), {
+                layoutData: new SplitterLayoutData({
+                    size: "20%"
+                }),
+                content: new Page({
+                    title: "Upload Service Url",
+                    headerText: "Upload Metadata",
+                    content: [
                         new sap.m.Input(this.createId("inputurl"), {
                             placeholder: "Enter your Service Url"
                         }),
@@ -128,37 +208,15 @@ sap.ui.define([
                     ]
                 })
             });
-            this.oInnerVerticalSplitPane2 = new sap.ui.layout.SplitPane(this.createId("splitpane2"), {
+            this.oInnerServiceUrlVerticalSplitPane2 = new sap.ui.layout.SplitPane(this.createId("splitpane5"), {
                 layoutData: new SplitterLayoutData({
-                    size: "30%"
                 }),
-                content: [new sap.m.Page(this.createId("split2"), {
+                content: [new sap.m.Page(this.createId("split3"), {
                     title: "uploaded Metadata Files"
                 })]
             });
-            this.oInnerVerticalSplitPane3 = new sap.ui.layout.SplitPane(this.createId("splitpane3"), {
-                layoutData: new SplitterLayoutData({
-                    size: "30%"
-                }),
-                content: [new sap.m.Page(this.createId("split3"), {
-                    title: "Service URL"
-                })]
-            });
-            this.oInnerHoriZontalContainer = new PaneContainer({
-                orientation: "Horizontal"
-            });
-            this.oInnerHorizontalSplitPane1 = new sap.ui.layout.SplitPane({
-                layoutData: new SplitterLayoutData({
-                    // size: ""
-                }),
-                content: this.oDynamicPage()
-            });
-            this.oInnerPaneContainer.addPane(this.oInnerVerticalContainer);
-            this.oInnerVerticalContainer.addPane(this.oInnerVerticalSplitPane1);
-            this.oInnerVerticalContainer.addPane(this.oInnerVerticalSplitPane2);
-            this.oInnerVerticalContainer.addPane(this.oInnerVerticalSplitPane3);
-            this.oInnerPaneContainer.addPane(this.oInnerHoriZontalContainer);
-            this.oInnerHoriZontalContainer.addPane(this.oInnerHorizontalSplitPane1);
+            this.oInnerUploadServiceUrlPaneContainer.addPane(this.oInnerServiceUrlVerticalSplitPane1);
+            this.oInnerUploadServiceUrlPaneContainer.addPane(this.oInnerServiceUrlVerticalSplitPane2);
         },
 
         otable: function () {
@@ -179,19 +237,39 @@ sap.ui.define([
                     template: stLi,
                     templateShareable: true
                 },
-
             });
             cli.addCell(updentitype);
-            var updenticont = new Text({
-                text: "{jsonModel>entityContainers}",
+            var stLi1 = new sap.m.StandardListItem({
+                title: "{jsonModel>}"
+            });
+            var updenticont = new sap.m.List({
+                items: {
+                    path: "jsonModel>entityContainers",
+                    template: stLi1,
+                    templateShareable: true
+                },
             });
             cli.addCell(updenticont);
-            var updcomtype = new Text({
-                text: "{jsonModel>complexTypes}",
+            var stLi2 = new sap.m.StandardListItem({
+                title: "{jsonModel>}"
+            });
+            var updcomtype = new sap.m.List({
+                items: {
+                    path: "jsonModel>complexTypes",
+                    template: stLi2,
+                    templateShareable: true
+                },
             });
             cli.addCell(updcomtype);
-            var updassociation = new Text({
-                text: "{jsonModel>associations}",
+            var stLi3 = new sap.m.StandardListItem({
+                title: "{jsonModel>}"
+            });
+            var updassociation = new sap.m.List({
+                items: {
+                    path: "jsonModel>associations",
+                    template: stLi3,
+                    templateShareable: true
+                },
             });
             cli.addCell(updassociation);
             var updschemacol = new Column({
@@ -275,7 +353,7 @@ sap.ui.define([
                     title: "Already File Exits Alert",
                     type: sap.m.DialogType.Message,
                     content: new sap.m.Text({
-                        text: `The ${oFile.name} file already exists.\n Do you want to overwrite your file?\n  Click Ok Button.Otherwise you choose Cancel Button.?`
+                        text: `The ${oFile.name} file already exists.\n Do you want to overwrite your file ?\n  Click Ok Button.Otherwise you choose Cancel Button.?`
                     }),
                     beginButton: new sap.m.Button({
                         text: "OK",
@@ -322,7 +400,7 @@ sap.ui.define([
                         title: "File Overwrite Confirmation",
                         type: sap.m.DialogType.Message,
                         content: new sap.m.Text({
-                            text: `File OverWrite`
+                            text: "File OverWrite"
                         }),
                         beginButton: new sap.m.Button({
                             text: "OK",
@@ -348,9 +426,7 @@ sap.ui.define([
                             oDialog.destroy();
                         }
                     });
-
                     oDialog.open();
-
                     // Exit the function early since the file already exists
                     return;
                 }
@@ -505,15 +581,11 @@ sap.ui.define([
 
                 // Now, you can access the data using the model
                 var oModelData = this.oJsonModel.getData();
-                console.log("JSON Model Data:", oModelData);
-
             }
         },
         iconclick: function () {
-            console.log("hdjsvhnbjk")
 
         },
-
         createTableSplitePanes: function () {
             this.oInnerTablePaneContainer = new PaneContainer({
                 orientation: "Horizontal"
@@ -629,25 +701,13 @@ sap.ui.define([
                                 text: "OK",
                                 press: function () {
                                     var selectedEntityType = oDialog.getContent()[1].getSelectedItem().getKey();
-                                    console.log("Entity Type", selectedEntityType)
                                     // Construct the OData service URL based on the selected entity type
                                     var oDataServiceUrl = "http://localhost:8080/com.klazp.rad.web/MyODataRAD.svc/";
-
                                     // Create a new instance of ODataModel with the dynamically constructed URL
                                     var odatavecretae = new sap.ui.model.odata.v2.ODataModel(oDataServiceUrl, {
                                         // json: true, // Use JSONP
                                         useBatch: false, // Disable batch requests if needed
-                                    })
-
-                                    odatavecretae.metadataLoaded(true).then(
-                                        function () {
-                                            // model is ready now
-                                            console.log(odatavecretae.getServiceMetadata(), "ASDFG");
-                                        },
-                                        function () {
-                                            // Display error information so that the user knows that the application does not work.
-
-                                        });
+                                    });
                                     odatavecretae.read(`/ODataMaterialsEntityContainer.${selectedEntityType + "s"}`, {
                                         success: function (data, response) {
                                             var aData = data.results;
@@ -656,9 +716,6 @@ sap.ui.define([
                                                 var { __metadata, ...cleanedItem } = item;
                                                 return cleanedItem;
                                             });
-
-                                            console.log("Data", cleanedData);
-
                                             // Create a table
                                             var oTableJsonModel = new sap.ui.model.json.JSONModel();
                                             oTableJsonModel.setData({
@@ -668,7 +725,7 @@ sap.ui.define([
                                             // Create a dynamic table
                                             var odynamicTable = new sap.m.Table({
                                                 inset: false,
-                                                headerText: "Dynamic Table",
+                                                headerText: `${selectedEntityType + 'Table'}`,
                                                 columns: []
                                             });
 
@@ -728,26 +785,86 @@ sap.ui.define([
                 sap.m.MessageToast.show("JSON Model is not available.");
             }
         },
-        onButtonClick:function(){
+        onButtonClick: function () {
             var inputValue = this.getView().byId("inputurl").getValue();
-            console.log("Input value:", inputValue);
             var list = new sap.m.List();
             var listItem = new sap.m.CustomListItem({
                 content: [new sap.m.Link({
                     text: inputValue,
-                    
+                    press: function () {
+                        this.onUrlPress(inputValue)
+                    }.bind(this)
+
                 })
-            ]
-        })
+                ]
+            })
             list.addItem(listItem);
-            console.log("1234567",listItem)
-
-            this.getView().byId("split3").addContent(list);  
+            this.getView().byId("split3").addContent(list);
             this.getView().byId("inputurl").setValue("");
+        },
+        onUrlPress: function (inputValue) {
+            // Make an Ajax request to the URL
+            $.ajax({
+                url: inputValue,
+                type: "GET",
+                success: function (data) {
+                    // Extract schema details from the XML document
+                    var aSchemaItems = data.querySelectorAll("Schema");
+                    var oJsonData = {
+                        schemas: []
+                    };
+                    aSchemaItems.forEach(function (oSchema, iIndex) {
+                        var oSchemaData = {
+                            schemaIndex: "Schema",
+                            entityTypes: [],
+                            entityContainers: [],
+                            complexTypes: [],
+                            associations: []
+                        };
 
+                        // Find entity types in the current schema
+                        var aEntityTypeItems = oSchema.querySelectorAll('EntityType');
+                        aEntityTypeItems.forEach(function (oEntityType) {
+                            var sEntityTypeName = oEntityType.getAttribute('Name');
+                            oSchemaData.entityTypes.push(sEntityTypeName);
+                        });
 
-        }
+                        // Find entity containers in the current schema
+                        var aEntityContainerItems = oSchema.querySelectorAll('EntityContainer');
+                        aEntityContainerItems.forEach(function (oEntityContainer) {
+                            var sEntityContainerName = oEntityContainer.getAttribute('Name');
+                            oSchemaData.entityContainers.push(sEntityContainerName);
+                        });
 
+                        // Find ComplexType containers in the current schema
+                        var aComplexItems = oSchema.querySelectorAll('ComplexType');
+                        aComplexItems.forEach(function (ocomplextype) {
+                            var sComplexName = ocomplextype.getAttribute('Name');
+                            oSchemaData.complexTypes.push(sComplexName);
+                        });
+
+                        // Find associations in the current schema
+                        var aAssociationItems = oSchema.querySelectorAll('Association');
+                        aAssociationItems.forEach(function (oAssociation) {
+                            var sAssociationName = oAssociation.getAttribute('Name');
+                            oSchemaData.associations.push(sAssociationName);
+                        });
+
+                        oJsonData.schemas.push(oSchemaData);
+                    });
+
+                    // Create a JSONModel and set the data
+                    this.oJsonModel = new JSONModel(oJsonData);
+                    this.getView().setModel(this.oJsonModel, "jsonModel");
+
+                    // Now, you can access the data using the model
+                    var oModelData = this.oJsonModel.getData();
+                }.bind(this),
+                error: function (error) {
+                    console.error("Error:", error);
+                }
+            });
+        },
 
     });
 });
