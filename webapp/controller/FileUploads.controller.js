@@ -699,7 +699,7 @@ sap.ui.define([
                             ],
                             beginButton: new sap.m.Button({
                                 text: "OK",
-                                press: function () {
+                                press: async function () {
                                     var selectedEntityType = oDialog.getContent()[1].getSelectedItem().getKey();
                                     // Construct the OData service URL based on the selected entity type
                                     var oDataServiceUrl = "http://localhost:8080/com.klazp.rad.web/MyODataRAD.svc/";
@@ -708,7 +708,37 @@ sap.ui.define([
                                         // json: true, // Use JSONP
                                         useBatch: false, // Disable batch requests if needed
                                     });
-                                    odatavecretae.read(`/ODataMaterialsEntityContainer.${selectedEntityType + "s"}`, {
+                                    var x;
+                                    var entcont;
+
+                                    entcont = await odatavecretae.metadataLoaded(true).then(
+                                        function findEntitySetByName() {
+                                            // Model is ready now
+                                            x = odatavecretae.getServiceMetadata();
+                                            if (x && x.dataServices && x.dataServices.schema) {
+                                                const schemas = x.dataServices.schema;
+                                                console.log("123", schemas)
+                                                for (const schema of schemas) {
+                                                    if (schema.entityContainer && schema.entityContainer.length > 0) {
+                                                        for (const container of schema.entityContainer) {
+                                                            if (container.entitySet && container.entitySet.length > 0) {
+                                                                const entitySet = container.entitySet.find(set => set.name === selectedEntityType + "s");
+                                                                if (entitySet) {
+                                                                    return { name: container.name, set: entitySet }
+
+
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                            // You can access x or perform further actions here
+                                        }).catch(function (error) {
+                                            console.error("Error loading metadata:", error);
+                                        });
+
+                                    odatavecretae.read(`/${entcont.name}.${selectedEntityType + "s"}`, {
                                         success: function (data, response) {
                                             var aData = data.results;
                                             var cleanedData = aData.map(function (item) {
@@ -725,7 +755,7 @@ sap.ui.define([
                                             // Create a dynamic table
                                             var odynamicTable = new sap.m.Table({
                                                 inset: false,
-                                                headerText: `${selectedEntityType + 'Table'}`,
+                                                headerText: `${selectedEntityType + 'Details'}`,
                                                 columns: []
                                             });
 

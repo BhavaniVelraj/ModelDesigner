@@ -2,4 +2,14 @@ specVersion: "3.1"
 metadata:
   name: grid-container
 type: application
+server:
+  customMiddleware:
+  - name: ui5-middleware-simpleproxy
+    afterMiddleware: compression
+    mountPath: /V2
+    configuration:
+      baseUri: "https://services.odata.org",
+      useProxy: true 
+
+
 
